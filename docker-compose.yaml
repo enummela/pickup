@@ -1,0 +1,22 @@
+version: "3.10"
+services:
+  target:
+    build:
+      context: ./docker/target
+    container_name: target
+    ports:
+      - "26:22"
+      - "3000:80"
+  lap:
+    build:
+      context: ./docker/lap
+    command:
+      - /usr/sbin/apache2ctl
+      - -D
+      - FOREGROUND
+    container_name: lap
+    ports:
+      - "3001:80"
+    volumes:
+      - ./index.php:/var/www/html/index.php
+    tty: true

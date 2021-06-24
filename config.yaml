@@ -1,0 +1,49 @@
+steps:
+  - name: update-apt-repos
+    type: Shell
+    action: run
+    command: apt-get update
+    not_if:
+      - type: Shell
+        # Update apt repositories if a successful update has never been performed.
+        command: "find /var/lib/apt/periodic/update-success-stamp"
+        action: run
+  - name: apache2
+    type: DebPackage
+    package: apache2
+    action: install
+  - name: remove-html-index
+    type: File
+    action: delete
+    file: /var/www/html/index.html
+  - name: php7.2
+    type: DebPackage
+    package: php7.2
+    action: install
+    env:
+      DEBIAN_FRONTEND: noninteractive
+  - name: libapache2-mod-php7.2
+    type: DebPackage
+    package: libapache2-mod-php7.2
+    action: install
+  - name: enable-libapache2-mod-php7.2
+    type: Shell
+    action: run
+    command: a2enmod php7.2
+    not_if:
+      - type: Shell
+        command: apachectl -M | grep php7_module
+        action: run
+    after:
+      - name: restart-apache2
+        type: Service
+        action: restart
+        service: apache2
+  - type: File
+    action: create
+    source: index.php
+    destination: /var/www/html/index.php
+    mode: "0644"
+    group: www-data
+    owner: www-data
+
